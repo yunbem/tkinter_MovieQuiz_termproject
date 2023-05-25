@@ -1,34 +1,45 @@
-from tkinter import *
+ï»¿from tkinter import *
 from tkinter import messagebox
 from tkinter import font
 from PIL import ImageTk, Image
 from MovieQuery import *
 
 class MovieQuiz:
-    def show_screen(self, screen_num):  # È­¸é ÀüÈ¯À» Ã³¸®ÇÏ´Â ÇÔ¼ö
-        screens = [self.screen0_frame, self.screen1_frame, self.screen2_frame, self.screen3_frame]
+    def show_screen(self, screen_num):  # í™”ë©´ ì „í™˜ì„ ì²˜ë¦¬í•˜ëŠ” í•¨ìˆ˜
+        screens = [self.screen0_frame, self.screen1_frame, self.screen2_frame, self.screen3_frame, self.screen0_exp_frame]
         for i, screen in enumerate(screens):
             if i == screen_num:
                 screen.pack()
+                if i == 0:
+                    self.setScreen0_frame()
             else:
                 screen.pack_forget()
 
-    def setupImageButton(self):  # ÀÌ¹ÌÁö ¹öÆ° »ı¼º ¹× ¹èÄ¡
-        button_coordinates = [(20, 20), (20, 220), (20, 420), (20, 620)] # ÁÂÃø ÇÁ·¹ÀÓ ³» ¹öÆ° 4°³
+    def check_answer(self, choice):
+        if choice == 0:
+            print('ì •ë‹µì…ë‹ˆë‹¤!!!')
+            self.screen0_exp_frame.configure(bg='cyan')
+        else:
+            print('í‹€ë ¸ìŠµë‹ˆë‹¤ã… ')
+            self.screen0_exp_frame.configure(bg='indian red')
+        self.show_screen(4);
+        
+    def setupDefaultImageButton(self):  # ì´ë¯¸ì§€ ë²„íŠ¼ ìƒì„± ë° ë°°ì¹˜
+        button_coordinates = [(20, 20), (20, 220), (20, 420), (20, 620)] # ì¢Œì¸¡ í”„ë ˆì„ ë‚´ ë²„íŠ¼ 4ê°œ
         for i, (x, y) in enumerate(button_coordinates):
             image_button = Button(self.left_frame, width=80, height=80, command=lambda num=i: self.show_screen(num))
             image_button.place(x=x, y=y)
             self.image_buttons.append(image_button)
 
-    def setupPosterButton(self):  # Æ÷½ºÅÍ ¹öÆ° »ı¼º ¹× ¹èÄ¡
-        button_coordinates = [(40, 340), (240, 340), (40, 560), (240, 560)] # ÄûÁî È­¸é ÇÁ·¹ÀÓ ³» Æ÷½ºÆ® ¹öÆ° 4°³
+    def setupPosterButton(self):  # í¬ìŠ¤í„° ë²„íŠ¼ ìƒì„± ë° ë°°ì¹˜
+        button_coordinates = [(40, 340), (240, 340), (40, 560), (240, 560)] # í€´ì¦ˆ í™”ë©´ í”„ë ˆì„ ë‚´ í¬ìŠ¤íŠ¸ ë²„íŠ¼ 4ê°œ
         for i, (x, y) in enumerate(button_coordinates):
-            poster_button = Button(self.screen0_frame, width=150, height=200)
+            poster_button = Button(self.screen0_frame, width=150, height=200, command=lambda choice=i: self.check_answer(choice))
             poster_button.place(x=x, y=y)
             self.poster_buttons.append(poster_button)
 
-    def setImageButton(self):   # ÀÌ¹ÌÁö ·Îµå ¹× ¹öÆ°¿¡ ÀÌ¹ÌÁö Àû¿ë
-        image_filenames = ["¹°À½Ç¥.png", "º°.png", "±×·¡ÇÁ.png", "¿µÈ­°ü.png"]
+    def setImageButton(self):   # ì´ë¯¸ì§€ ë¡œë“œ ë° ë²„íŠ¼ì— ì´ë¯¸ì§€ ì ìš©
+        image_filenames = ["ë¬¼ìŒí‘œ.png", "ë³„.png", "ê·¸ë˜í”„.png", "ì˜í™”ê´€.png"]
         for i, filename in enumerate(image_filenames):
             image = Image.open(filename)
             image = image.resize((80, 80))
@@ -36,7 +47,7 @@ class MovieQuiz:
             self.image_buttons[i].config(image=photo)
             self.image_buttons[i].image = photo
 
-    def setPosterButton(self):  # Æ÷½ºÅÍ ÀÌ¹ÌÁö ·Îµå ¹× ¹öÆ°¿¡ Æ÷½ºÅÍ ÀÌ¹ÌÁö Àû¿ë
+    def setPosterButton(self):  # í¬ìŠ¤í„° ì´ë¯¸ì§€ ë¡œë“œ ë° ë²„íŠ¼ì— í¬ìŠ¤í„° ì´ë¯¸ì§€ ì ìš©
         image_filenames = ["answer_poster.jpg", "poster0.jpg", "poster1.jpg", "poster2.jpg"]
         for i, filename in enumerate(image_filenames):
             image = Image.open(filename)
@@ -45,56 +56,24 @@ class MovieQuiz:
             self.poster_buttons[i].config(image=photo)
             self.poster_buttons[i].image = photo
 
-    def setupLabel(self):
-        label_texts = ["New ÄûÁî", "Áñ°ÜÃ£±â", "ÃÖ±ÙÁ¤´äÀ²", "»ó¿µ ¿µÈ­°ü"]
+    def setupDefaultLabel(self):
+        label_texts = ["New í€´ì¦ˆ", "ì¦ê²¨ì°¾ê¸°", "ìµœê·¼ì •ë‹µìœ¨", "ìƒì˜ ì˜í™”ê´€"]
         label_coordinates = [(10, 120), (10, 320), (10, 520), (10, 720)]
         for text, (x, y) in zip(label_texts, label_coordinates):
             label = Label(self.left_frame, text=text, width=10, height=1, font=self.fontstyle)
             label.place(x=x, y=y)
 
-    def __init__(self):
-        # tkinter À©µµ¿ì »ı¼º
-        self.window = Tk()
-        self.window.title("TEST_GUI")
-        self.window.geometry("600x800")
-        self.window.configure(bg='white')
-        self.fontstyle = font.Font(self.window, size=8, weight='bold', family='Consolas')
-        self.fontstyle = font.Font(self.window, size=14, weight='bold', family='Consolas')
-
-        self.left_frame = Frame(self.window, width=130, height=800) # ÁÂÃø ÇÁ·¹ÀÓ »ı¼º
-        self.left_frame.pack(side="left")
-
-        self.screen0_frame = Frame(self.window, width=470, height=800, bg="cyan")  # newÄûÁî È­¸é
-        self.screen1_frame = Frame(self.window, width=470, height=800, bg="white")  # Áñ°ÜÃ£±â È­¸é
-        self.screen2_frame = Frame(self.window, width=470, height=800, bg="white")  # ÃÖ±Ù Á¤´äÀ² È­¸é
-        self.screen3_frame = Frame(self.window, width=470, height=800, bg="white")  # »ó¿µ ¿µÈ­°ü È­¸é
-
-        self.image_buttons = []
-        self.poster_buttons = []
-        self.setupImageButton()
-        self.setImageButton()
-        self.setupLabel()
+    def setScreen0_frame(self):
 
         self.movie = MovieQuery()
         self.movie_query = self.movie.getRandomQuery()
-        self.movie.PosterDownload(self.movie_query, -1) # -1Àº Á¤´äÀº ¿µÈ­ Æ÷½ºÅÍ
+        self.movie.PosterDownload(self.movie_query, -1) # -1ì€ ì •ë‹µì€ ì˜í™” í¬ìŠ¤í„°
         self.movie.getMovieInfo(self.movie_query)
 
-        # ÃÊ±â È­¸é ¼³Á¤
-        self.show_screen(0)
-        
-        # screen0_frame¿¡ ÅØ½ºÆ® Á¤º¸¸¦ ´ã´Â ¹Ú½º¿Í ½ºÅ©·Ñ¹Ù »ı¼º
+        # screen0_frameì— í…ìŠ¤íŠ¸ ì •ë³´ë¥¼ ë‹´ëŠ” ë°•ìŠ¤ì™€ ìŠ¤í¬ë¡¤ë°” ìƒì„±
         self.text_box = Text(self.screen0_frame, width=60, height=15)
-        '''
-        self.scrollbar = Scrollbar(self.screen0_frame)
-        self.scrollbar.pack(side=RIGHT, fill=Y)
 
-        # ÅØ½ºÆ® ¹Ú½º¿Í ½ºÅ©·Ñ¹Ù ¿¬°á
-        self.text_box.config(yscrollcommand=self.scrollbar.set)
-        self.scrollbar.config(command=self.text_box.yview)
-        '''
-
-        # ÅØ½ºÆ® ¹Ú½º »ó´Ü¿¡ ¹èÄ¡
+        # í…ìŠ¤íŠ¸ ë°•ìŠ¤ ìƒë‹¨ì— ë°°ì¹˜
         self.text_box.place(x=20, y=20)
       
         self.set_MovieOverview()
@@ -103,15 +82,45 @@ class MovieQuiz:
             for i, movie in enumerate(similar_movies[:3]):
                 self.movie.PosterDownload(movie, i)
      
-        # Æ÷½ºÅÍ ÀÌ¹ÌÁö ¹öÆ° »ı¼º
-        self.setupPosterButton()
+        # í¬ìŠ¤í„° ì´ë¯¸ì§€ ë²„íŠ¼ ìƒì„±
+        
         self.setPosterButton()
+
+    def __init__(self):
+        # tkinter ìœˆë„ìš° ìƒì„±
+        self.window = Tk()
+        self.window.title("TEST_GUI")
+        self.window.geometry("600x800")
+        self.window.configure(bg='white')
+        self.fontstyle = font.Font(self.window, size=8, weight='bold', family='Consolas')
+        self.fontstyle = font.Font(self.window, size=14, weight='bold', family='Consolas')
+
+        self.left_frame = Frame(self.window, width=130, height=800) # ì¢Œì¸¡ í”„ë ˆì„ ìƒì„±
+        self.left_frame.pack(side="left")
+
+        self.screen0_frame = Frame(self.window, width=470, height=800, bg="white")  # newí€´ì¦ˆ í™”ë©´
+        self.screen1_frame = Frame(self.window, width=470, height=800, bg="white")  # ì¦ê²¨ì°¾ê¸° í™”ë©´
+        self.screen2_frame = Frame(self.window, width=470, height=800, bg="white")  # ìµœê·¼ ì •ë‹µìœ¨ í™”ë©´
+        self.screen3_frame = Frame(self.window, width=470, height=800, bg="white")  # ìƒì˜ ì˜í™”ê´€ í™”ë©´
+        self.screen0_exp_frame = Frame(self.window, width=470, height=800, bg="cyan") # í•´ì„¤ í™”ë©´
+
+        self.image_buttons = []
+        self.poster_buttons = []
+        self.setupDefaultImageButton()
+        self.setImageButton()
+        self.setupDefaultLabel()
+        self.setupPosterButton()
+        
+        
+
+        # ì´ˆê¸° í™”ë©´ ì„¤ì •
+        self.show_screen(0)
 
         self.window.mainloop()
 
-    def set_MovieOverview(self): # ÅØ½ºÆ® ¹Ú½º¿¡ °Ë»ö °á°ú ±âÀÔ
+    def set_MovieOverview(self): # í…ìŠ¤íŠ¸ ë°•ìŠ¤ì— ê²€ìƒ‰ ê²°ê³¼ ê¸°ì…
         
-        self.text_box.delete('1.0', END)  # ±âÁ¸ ³»¿ë »èÁ¦
+        self.text_box.delete('1.0', END)  # ê¸°ì¡´ ë‚´ìš© ì‚­ì œ
 
         overview = self.movie.getMovieOverview(self.movie_query)
         info = f"{overview}\n\n"
