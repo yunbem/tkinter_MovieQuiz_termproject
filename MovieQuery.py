@@ -4,7 +4,7 @@ import random
 class MovieQuery:
     def __init__(self):
         self.params = {
-            "api_key": "7dd451947ac9f89cc2c61f8dce323beb",
+            "api_key": "API_KEY",
             "language": "ko",
             "page": "2",
             #"sort_by": "popularity.desc",  # 인기순으로 정렬
