@@ -1,0 +1,23 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33424.131
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "텀프로젝트_영화퀴즈", "텀프로젝트_영화퀴즈.pyproj", "{3830A88B-B2BE-4F27-B8BF-3F0F73B11F20}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3830A88B-B2BE-4F27-B8BF-3F0F73B11F20}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3830A88B-B2BE-4F27-B8BF-3F0F73B11F20}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {811E6C25-379F-4FC4-993A-010D618EAADB}
+	EndGlobalSection
+EndGlobal
