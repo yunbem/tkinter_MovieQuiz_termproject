@@ -3,7 +3,7 @@ import random
 
 class MovieQuery:
     def __init__(self):
-        params = {
+        self.params = {
             "api_key": "7dd451947ac9f89cc2c61f8dce323beb",
             "language": "ko",
             "page": "2",
@@ -13,11 +13,23 @@ class MovieQuery:
             "vote_count.gte": "200",  # 최소 투표 수 조건
         }
 
-        url = 'https://api.themoviedb.org/3/discover/movie'  # 정보를 요청할 주소
-        resp = requests.get(url, params=params)
-        self.data = resp.json()['results']
-
+        self.data = []  # 영화 데이터를 저장할 리스트
         self.bookmarks = []  # 즐겨찾기 저장할 리스트
+        self.fetchMovieData()  # 영화 데이터를 가져옴
+
+    def fetchMovieData(self):
+        page = 1
+        for _ in range(5):
+            self.params["page"] = str(page)
+            url = 'https://api.themoviedb.org/3/discover/movie'  # 정보를 요청할 주소
+            resp = requests.get(url, params=self.params)
+            page_data = resp.json()["results"]
+
+            if not page_data:
+                break  # 페이지 데이터가 없으면 종료
+
+            self.data.extend(page_data)  # 페이지 데이터를 전체 데이터에 추가
+            page += 1
 
     def getRandomQuery(self):
         if self.data:
@@ -35,10 +47,14 @@ class MovieQuery:
 
         if 'overview' in query and query['overview']:
             print("개요:", query['overview'])
+            self.moviequery = query
         else:
             print("개요 정보가 없습니다. 다른 쿼리로 영화 정보를 조회합니다.")
             new_query = self.getRandomQuery()  # 다른 쿼리를 가져옴
             self.getMovieInfo(new_query)  # 다른 쿼리로 재귀적으로 호출
+
+    def getMovieQuery(self):
+        return self.moviequery
 
     def PosterDownload(self, query, num): # 영화 포스터 이미지를 받습니다
         if query['poster_path']:

@@ -11,7 +11,7 @@ class ChatGPT:
         if prompt is None:
             self.prompt = input("지시사항을 입력하세요: ")
         else:
-            self.prompt = prompt+'의 줄거리를 요약해줘'
+            self.prompt = prompt+' 의 줄거리를 요약해줘'
 
         self.response = openai.Completion.create(
           model="text-davinci-003",

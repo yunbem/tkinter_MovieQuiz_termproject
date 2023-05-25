@@ -29,6 +29,9 @@ class MovieQuiz:
 
     def check_info(self, choice):
         pass
+
+    def check_bookmarks(self, choice):
+        pass
         
     def setupDefaultImageButton(self):  # 이미지 버튼 생성 및 배치
         button_coordinates = [(20, 20), (20, 220), (20, 420), (20, 620)] # 좌측 프레임 내 버튼 4개
@@ -58,25 +61,34 @@ class MovieQuiz:
                           bg='white', font=self.fontstyle1)
         self.Gpt_label.place(x=10, y=10)
 
-    def setupPosterButton_Quiz(self):  # 퀴즈 화면 포스터 버튼 생성 및 배치
-        button_coordinates = [(40, 340), (240, 340), (40, 560), (240, 560)] # 퀴즈 화면 프레임 내 포스트 버튼 4개
+    def setupPosterButton(self):
+        # 퀴즈 화면 포스터 버튼 생성 및 배치
+        button_coordinates = [(50, 340), (250, 340), (50, 560), (250, 560)] # 퀴즈 화면 프레임 내 포스트 버튼 4개
         for i, (x, y) in enumerate(button_coordinates):
             poster_button = Button(self.screen0_frame, width=150, height=200, command=lambda choice=i: self.check_answer(choice))
             poster_button.place(x=x, y=y)
             self.poster_buttons.append(poster_button)
 
-        button_coordinates = [(40, 90), (240, 90), (40, 460), (240, 460)] # 퀴즈 화면 프레임 내 포스트 버튼 4개
-        for i, (x, y) in enumerate(button_coordinates):
-            poster_button = Button(self.screen0_exp_frame, width=150, height=200, command=lambda choice=i: self.check_info(choice))
-            poster_button.place(x=x, y=y)
-            self.poster_buttons.append(poster_button)
-
-    def setupPosterButton_Exp(self):  # 해설 화면 포스터 버튼 생성 및 배치
-        button_coordinates = [(40, 90), (240, 90), (40, 460), (240, 460)] # 퀴즈 화면 프레임 내 포스트 버튼 4개
+        # 해설 화면 포스터 버튼 생성 및 배치
+        button_coordinates = [(50, 90), (250, 90), (50, 460), (250, 460)] # 해설 화면 프레임 내 포스트 버튼 4개
         for i, (x, y) in enumerate(button_coordinates):
             poster_button = Button(self.screen0_exp_frame, width=150, height=200, command=lambda choice=i: self.check_info(choice))
             poster_button.place(x=x, y=y)
             self.poster_buttons2.append(poster_button)
+
+    def setupBookmarksButton(self):
+        # 해설 화면 즐겨찾기 버튼 생성 및 배치, 이미지 적용
+        image = Image.open("별.png")
+        image = image.resize((40, 40))
+        photo = ImageTk.PhotoImage(image)
+        
+        button_coordinates = [(20, 90), (220, 90), (20, 460), (220, 460)] # 해설 화면 프레임 내 포스트 버튼 4개
+        for i, (x, y) in enumerate(button_coordinates):
+            bookmark_button = Button(self.screen0_exp_frame, width=40, height=40, command=lambda choice=i: self.check_bookmarks(choice))
+            bookmark_button.place(x=x, y=y)
+            self.bookmarks_buttons.append(bookmark_button)
+            self.bookmarks_buttons[i].config(image=photo)
+            self.bookmarks_buttons[i].image = photo
 
     def setPosterButton(self):  # 포스터 이미지 로드 및 버튼에 포스터 이미지 적용
         image_filenames = ["answer_poster.jpg", "poster0.jpg", "poster1.jpg", "poster2.jpg"]
@@ -86,41 +98,73 @@ class MovieQuiz:
             photo = ImageTk.PhotoImage(image)
             self.poster_buttons[i].config(image=photo)
             self.poster_buttons[i].image = photo
+            self.poster_buttons2[i].config(image=photo)
+            self.poster_buttons2[i].image = photo
 
-    def set_MovieOverview(self, str): # 텍스트 박스에 검색 결과 기입
+    def setGptInstance(self):   # gpt 연동하기
+        self.gpt = ChatGPT(self.movie_title)
+        self.set_MovieStr(self.gpt.getPrompt()) # 텍스트 박스에 gpt 대답 기입하기
+
+    def setGptButton(self):     # GPT 버튼, 라벨 생성 및 배치
+        Gpt_label = Label(self.screen0_frame, text="(버튼을 눌러서 GPT 해설을 볼 수 있어요)", 
+                          bg='white', font=self.fontstyle2)
+        Gpt_label.place(x=80, y=240)
+        Gpt_label2 = Label(self.screen0_frame, text="(다만 조금 시간이 걸릴 수 있어요)", 
+                          bg='white', font=self.fontstyle2)
+        Gpt_label2.place(x=80, y=260)
+        
+        # 토큰 사용량에 따라 비용을 내야하기 때문에 주의. 
+        # 처음 api를 사용할 때 3개월동안 18달러까지는 무료로 사용할 수 있다. 
+        #Gpt_button = Button(self.screen0_frame, width=40, height=40 , command=self.setGptInstance)
+        Gpt_button = Button(self.screen0_frame, width=40, height=40)
+        Gpt_button.place(x=20, y=240)
+        image = Image.open("ChatGPT.png")
+        image = image.resize((40, 40))
+        photo = ImageTk.PhotoImage(image)
+        Gpt_button.config(image=photo)
+        Gpt_button.image = photo
+
+    def set_MovieStr(self, str): # 텍스트 박스에 검색 결과 기입
         self.text_box.insert(END, f"{str}\n\n")
 
     def setScreen0_frame(self):     # new퀴즈 화면 GUI 구현
-        # 영화 정보 받기
+        # 문제 영화 정보 받기
         self.movie = MovieQuery()
         self.movie_query = self.movie.getRandomQuery()
-        self.movie.PosterDownload(self.movie_query, -1) # -1은 정답은 영화 포스터
         self.movie.getMovieInfo(self.movie_query)
-        self.answer_title = self.movie.getMovieTitle(self.movie_query)
-        self.answer_overview = self.movie.getMovieOverview(self.movie_query)
+        self.movie_query = self.movie.getMovieQuery()         # 진짜 거지같은 코드다
+        self.movie.PosterDownload(self.movie_query, -1) # -1은 문제 영화 포스터
+        self.movie_title = self.movie.getMovieTitle(self.movie_query)       # 문제 영화 제목
+        self.movie_overview = self.movie.getMovieOverview(self.movie_query) # 문제 영화 줄거리
 
-        # screen0_frame에 텍스트 정보를 담는 박스와 스크롤바 생성
+        self.prob_movies = []
+        self.prob_movies.append(self.movie)  # 보기에 문제 영화 넣기
+
+        # screen0_frame에 텍스트 정보를 담는 박스 생성
         self.text_box = Text(self.screen0_frame, width=60, height=15)
+        self.text_box.place(x=20, y=20)         # 텍스트 박스 상단에 배치
+        self.text_box.delete('1.0', END)        # 텍스트 박스 기존 내용 삭제
+        self.set_MovieStr(self.movie_overview)  # 텍스트 박스에 문제 영화의 줄거리 기입
 
-        # 텍스트 박스 상단에 배치
-        self.text_box.place(x=20, y=20)
-      
-        self.text_box.delete('1.0', END)  # 기존 내용 삭제
-        self.set_MovieOverview(self.answer_overview)
+        # 유사한 영화들 정보 받기
         self.similar_movies = self.movie.getSimilarGenreMovies(self.movie_query)
         if self.similar_movies:
             for i, movie in enumerate(self.similar_movies[:3]):
                 self.movie.PosterDownload(movie, i)
+                self.prob_movies.append(movie)
      
+        # gpt 버튼 생성 및 배치
+        self.setGptButton()
+
         # 포스터 이미지 초기화
         self.setPosterButton()
 
-        #self.setGptButton()
+        print(self.prob_movies)
+
+        
 
     def setScreen0_exp_frame(self): # 퀴즈해설 화면 GUI 구현
-        self.Gpt_label.configure(text="정답은... '"+str(self.answer_title)+ "' 입니다!")
-        # 포스터 이미지 초기화
-        #self.setPosterButton()
+        self.Gpt_label.configure(text="정답은... '"+str(self.movie_title)+ "' 입니다!")
 
     def setScreen1_frame(self):     # 즐겨찾기 화면 GUI 구현
         pass
@@ -134,7 +178,7 @@ class MovieQuiz:
     def __init__(self):
         # tkinter 윈도우 생성
         self.window = Tk()
-        self.window.title("TEST_GUI")
+        self.window.title("영화퀴즈_프로그램")
         self.window.geometry("600x800")
         self.window.configure(bg='white')
         self.fontstyle1 = font.Font(self.window, size=14, weight='bold', family='Consolas')
@@ -152,11 +196,13 @@ class MovieQuiz:
         self.image_buttons = []
         self.poster_buttons = []
         self.poster_buttons2 = []
+        self.bookmarks_buttons = []
+        self.prob_movies = []
         self.setupDefaultImageButton()
         self.setImageButton()
         self.setupDefaultLabel()
-        self.setupPosterButton_Quiz()
-        #self.setupPosterButton_Exp()
+        self.setupPosterButton()
+        self.setupBookmarksButton()
         
         # 초기 화면 설정
         self.show_screen(0)
