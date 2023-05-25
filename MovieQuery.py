@@ -19,7 +19,7 @@ class MovieQuery:
 
     def fetchMovieData(self):
         page = 1
-        for _ in range(5):
+        for _ in range(8):
             self.params["page"] = str(page)
             url = 'https://api.themoviedb.org/3/discover/movie'  # 정보를 요청할 주소
             resp = requests.get(url, params=self.params)

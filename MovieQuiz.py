@@ -6,17 +6,25 @@ from MovieQuery import *
 from ChatGPT import *
 
 class MovieQuiz:
-    def show_screen(self, screen_num):  # 화면 전환을 처리하는 함수
+    def show_screen(self, screen_num):
         screens = [self.screen0_frame, self.screen1_frame, self.screen2_frame, self.screen3_frame, self.screen0_exp_frame]
-        for i, screen in enumerate(screens):
-            if i == screen_num:
-                screen.pack()
-                if i == 0:
-                    self.setScreen0_frame()
-                elif i == 4:
-                    self.setScreen0_exp_frame()
-            else:
-                screen.pack_forget()
+        screen = screens[screen_num]
+        screen.pack()
+    
+        if screen_num == 0:
+            self.setScreen0_frame()
+        elif screen_num == 1:
+            self.setScreen1_frame()
+        elif screen_num == 2:
+            self.setScreen2_frame()
+        elif screen_num == 3:
+            self.setScreen3_frame()
+        elif screen_num == 4:
+            self.setScreen0_exp_frame()
+    
+        for i, other_screen in enumerate(screens):
+            if i != screen_num:
+                other_screen.pack_forget()
 
     def check_answer(self, choice):
         if self.rand_movies[choice] == self.movie_query:
@@ -41,8 +49,22 @@ class MovieQuiz:
         self.prob_text_boxs[choice].insert(END, info)
 
     def check_bookmarks(self, choice):
-        self.movie.addBookmark(self.rand_movies[choice])
+        movie = self.rand_movies[choice]
+        self.movie.addBookmark(movie)
         print("즐겨찾기에 등록되었습니다!")
+
+        if movie['poster_path']:
+            poster_path = movie['poster_path']
+            poster_url = f"https://image.tmdb.org/t/p/w500/{poster_path}"
+
+            response = requests.get(poster_url)
+
+            if response.status_code == 200:
+                with open(f'bookmark_poster{len(self.movie.getBookmarks())}.jpg', 'wb') as f:
+                    f.write(response.content)
+                print(f"즐겨찾기 포스터 {len(self.movie.getBookmarks())} 이미지 다운로드 완료")
+            else:
+                print(f"즐겨찾기 포스터 {len(self.movie.getBookmarks())} 이미지 다운로드 실패")
         
     def setupDefaultImageButton(self):  # 이미지 버튼 생성 및 배치
         button_coordinates = [(20, 20), (20, 220), (20, 420), (20, 620)] # 좌측 프레임 내 버튼 4개
@@ -92,9 +114,9 @@ class MovieQuiz:
             self.bookmarks_buttons[i].image = photo
 
     def setupTextBox(self):
-        # screen0_exp_frame에 텍스트 정보를 담는 박스 4개 생성
+        # screen0_exp_frame(해설 화면)에 텍스트 정보를 담는 박스 4개 생성
         text_box_coordinates = [(25, 300), (225, 300), (25, 670), (225, 670)] # 퀴즈 화면 프레임 내 포스트 버튼 4개
-        for i, (x, y) in enumerate(text_box_coordinates):
+        for (x, y) in (text_box_coordinates):
             prob_text_box = Text(self.screen0_exp_frame, width=25, height=9)
             prob_text_box.place(x=x, y=y)
             self.prob_text_boxs.append(prob_text_box)
@@ -162,11 +184,10 @@ class MovieQuiz:
 
     def setScreen0_frame(self): # new퀴즈 화면 GUI 구현
         # 문제 영화 정보 받기
-        self.movie = MovieQuery()
-        self.movie_query = self.movie.getRandomQuery()
-        self.movie.getMovieInfo(self.movie_query)
+        #self.movie_query = self.movie.getRandomQuery()
+        #self.movie.getMovieInfo(self.movie_query)
+        self.movie.getMovieInfo(self.movie.getRandomQuery())
         self.movie_query = self.movie.getMovieQuery()           # 진짜 거지같은 코드다
-        #self.movie.PosterDownload(self.movie_query, -1)         # -1은 문제 영화 포스터
         self.movie_title = self.movie.getMovieTitle(self.movie_query)       # 문제 영화 제목
         self.movie_overview = self.movie.getMovieOverview(self.movie_query) # 문제 영화 줄거리
 
@@ -182,8 +203,7 @@ class MovieQuiz:
         # 유사한 영화들 정보 받기
         self.similar_movies = self.movie.getSimilarGenreMovies(self.movie_query)
         if self.similar_movies:
-            for i, movie in enumerate(self.similar_movies[:3]):
-                #self.movie.PosterDownload(movie, i)
+            for movie in self.similar_movies[:3]:
                 self.prob_movies.append(movie)
      
         # gpt 버튼 생성 및 배치
@@ -199,19 +219,33 @@ class MovieQuiz:
 
         for text_box in self.prob_text_boxs:
             text_box.delete(1.0, END)  # 기존 텍스트 삭제
-        '''
-        self.prob_text_boxs
-        self.text_box_prob1 = Text(self.screen0_exp_frame, width=25, height=9)
-        self.text_box_prob1.place(x=25, y=300) 
-        self.text_box_prob2 = Text(self.screen0_exp_frame, width=25, height=9)
-        self.text_box_prob2.place(x=225, y=300)
-        self.text_box_prob3 = Text(self.screen0_exp_frame, width=25, height=9)
-        self.text_box_prob3.place(x=25, y=670)
-        self.text_box_prob4 = Text(self.screen0_exp_frame, width=25, height=9)
-        self.text_box_prob4.place(x=225, y=670)'''
 
     def setScreen1_frame(self):     # 즐겨찾기 화면 GUI 구현
-        pass
+
+        # screen1_frame(즐겨찾기 화면)에 텍스트 박스 생성
+        self.bookmark_text_boxs = []
+
+        for i in range(1, len(self.movie.getBookmarks()) + 1):
+            bookmark_text_box = Text(self.screen1_frame, width=36, height=20)
+            bookmark_text_box.place(x=200, y=20+(i-1)*220)
+            self.bookmark_text_boxs.append(bookmark_text_box)
+            image = Image.open(f'bookmark_poster{i}.jpg')
+            image = image.resize((150, 200))
+            photo = ImageTk.PhotoImage(image)
+            bookmark_poster = Label(self.screen1_frame, image=photo)
+            bookmark_poster.place(x=20, y=20+(i-1)*220)
+            bookmark_poster.image = photo
+
+        for i, movie in enumerate(self.movie.getBookmarks()):
+            title = self.movie.getMovieTitle(movie)
+            release_date = self.movie.getMovieRelease(movie)
+            vote_average = self.movie.getMovieVote(movie)
+            overview = self.movie.getMovieOverview(movie)
+
+            info = f"영화 제목: {title}\n개봉 일자: {release_date}\n평점: {vote_average}\n개요: {overview}"
+
+            # info를 화면에 출력하는 코드 추가
+            self.bookmark_text_boxs[i].insert(END, info)
 
     def setScreen2_frame(self):     # 최근 정답율 화면 GUI 구현
         pass
@@ -242,6 +276,7 @@ class MovieQuiz:
         self.poster_buttons2 = []
         self.bookmarks_buttons = []
         self.prob_text_boxs = []
+        self.bookmark_text_boxs = []
         self.prob_movies = []
         self.setupDefaultImageButton()
         self.setImageButton()
@@ -251,6 +286,7 @@ class MovieQuiz:
         self.setupTextBox()
         
         # 초기 화면 설정
+        self.movie = MovieQuery()
         self.show_screen(0)
 
         self.window.mainloop()
