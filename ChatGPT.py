@@ -6,7 +6,7 @@ class ChatGPT:
         return self.response["choices"][0]["text"].strip();
 
     def __init__(self, prompt = None):
-        openai.api_key = "API_KEY"
+        openai.api_key = "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"
 
         if prompt is None:
             self.prompt = input("지시사항을 입력하세요: ")
