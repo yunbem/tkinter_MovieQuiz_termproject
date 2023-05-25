@@ -1,4 +1,4 @@
-import requests
+ï»¿import requests
 import random
 
 class MovieQuery:
@@ -6,41 +6,41 @@ class MovieQuery:
         params = {
             "api_key": "7dd451947ac9f89cc2c61f8dce323beb",
             "language": "ko",
-            "page": "1",
-            #"sort_by": "popularity.desc",  # ÀÎ±â¼øÀ¸·Î Á¤·Ä
-            "sort_by": "vote_average.desc",  # ÆòÁ¡¼øÀ¸·Î Á¤·Ä
-            #"include_adult": "false"  # ¼ºÀÎ ¿µÈ­ Á¦¿Ü
-            "vote_count.gte": "200",  # ÃÖ¼Ò ÅõÇ¥ ¼ö Á¶°Ç
+            "page": "2",
+            #"sort_by": "popularity.desc",  # ì¸ê¸°ìˆœìœ¼ë¡œ ì •ë ¬
+            "sort_by": "vote_average.desc",  # í‰ì ìˆœìœ¼ë¡œ ì •ë ¬
+            #"include_adult": "false"  # ì„±ì¸ ì˜í™” ì œì™¸
+            "vote_count.gte": "200",  # ìµœì†Œ íˆ¬í‘œ ìˆ˜ ì¡°ê±´
         }
 
-        url = 'https://api.themoviedb.org/3/discover/movie'  # Á¤º¸¸¦ ¿äÃ»ÇÒ ÁÖ¼Ò
+        url = 'https://api.themoviedb.org/3/discover/movie'  # ì •ë³´ë¥¼ ìš”ì²­í•  ì£¼ì†Œ
         resp = requests.get(url, params=params)
         self.data = resp.json()['results']
 
-        self.bookmarks = []  # Áñ°ÜÃ£±â ÀúÀåÇÒ ¸®½ºÆ®
+        self.bookmarks = []  # ì¦ê²¨ì°¾ê¸° ì €ì¥í•  ë¦¬ìŠ¤íŠ¸
 
     def getRandomQuery(self):
         if self.data:
-            query = random.choice(self.data)  # ¿µÈ­ ¸ñ·Ï¿¡¼­ ·£´ıÇÏ°Ô ¿µÈ­ ¼±ÅÃ
+            query = random.choice(self.data)  # ì˜í™” ëª©ë¡ì—ì„œ ëœë¤í•˜ê²Œ ì˜í™” ì„ íƒ
             return query
         else:
-            print("data¸¦ ¹Ş¾Æ¿ÀÁö ¸øÇß½À´Ï´Ù.")
+            print("dataë¥¼ ë°›ì•„ì˜¤ì§€ ëª»í–ˆìŠµë‹ˆë‹¤.")
             return None 
 
-    def getMovieInfo(self, query): # ¿µÈ­ Á¤º¸¸¦ ¹Ş½À´Ï´Ù.
-        # ¿µÈ­ Á¤º¸ Ãâ·Â
-        print("¿µÈ­ Á¦¸ñ:", query['title'])
-        print("°³ºÀ ÀÏÀÚ:", query['release_date'])
-        print("ÆòÁ¡:", query['vote_average'])
+    def getMovieInfo(self, query): # ì˜í™” ì •ë³´ë¥¼ ë°›ìŠµë‹ˆë‹¤.
+        # ì˜í™” ì •ë³´ ì¶œë ¥
+        print("ì˜í™” ì œëª©:", query['title'])
+        print("ê°œë´‰ ì¼ì:", query['release_date'])
+        print("í‰ì :", query['vote_average'])
 
         if 'overview' in query and query['overview']:
-            print("°³¿ä:", query['overview'])
+            print("ê°œìš”:", query['overview'])
         else:
-            print("°³¿ä Á¤º¸°¡ ¾ø½À´Ï´Ù. ´Ù¸¥ Äõ¸®·Î ¿µÈ­ Á¤º¸¸¦ Á¶È¸ÇÕ´Ï´Ù.")
-            new_query = self.getRandomQuery()  # ´Ù¸¥ Äõ¸®¸¦ °¡Á®¿È
-            self.getMovieInfo(new_query)  # ´Ù¸¥ Äõ¸®·Î Àç±ÍÀûÀ¸·Î È£Ãâ
+            print("ê°œìš” ì •ë³´ê°€ ì—†ìŠµë‹ˆë‹¤. ë‹¤ë¥¸ ì¿¼ë¦¬ë¡œ ì˜í™” ì •ë³´ë¥¼ ì¡°íšŒí•©ë‹ˆë‹¤.")
+            new_query = self.getRandomQuery()  # ë‹¤ë¥¸ ì¿¼ë¦¬ë¥¼ ê°€ì ¸ì˜´
+            self.getMovieInfo(new_query)  # ë‹¤ë¥¸ ì¿¼ë¦¬ë¡œ ì¬ê·€ì ìœ¼ë¡œ í˜¸ì¶œ
 
-    def PosterDownload(self, query, num): # ¿µÈ­ Æ÷½ºÅÍ ÀÌ¹ÌÁö¸¦ ¹Ş½À´Ï´Ù
+    def PosterDownload(self, query, num): # ì˜í™” í¬ìŠ¤í„° ì´ë¯¸ì§€ë¥¼ ë°›ìŠµë‹ˆë‹¤
         if query['poster_path']:
             poster_path = query['poster_path']
             poster_url = f"https://image.tmdb.org/t/p/w500/{poster_path}"
@@ -60,9 +60,9 @@ class MovieQuery:
                 elif num == 2:
                     with open('poster2.jpg', 'wb') as f:
                         f.write(response.content)
-                print("Æ÷½ºÅÍ ÀÌ¹ÌÁö ´Ù¿î·Îµå ¿Ï·á")
+                print("í¬ìŠ¤í„° ì´ë¯¸ì§€ ë‹¤ìš´ë¡œë“œ ì™„ë£Œ")
             else:
-                print("Æ÷½ºÅÍ ÀÌ¹ÌÁö ´Ù¿î·Îµå ½ÇÆĞ")
+                print("í¬ìŠ¤í„° ì´ë¯¸ì§€ ë‹¤ìš´ë¡œë“œ ì‹¤íŒ¨")
 
     def getMovieTitle(self, query):
         return query['title']
@@ -87,7 +87,7 @@ class MovieQuery:
             
             return similar_movies
         else:
-            print("¿µÈ­ÀÇ Àå¸£ Á¤º¸°¡ ¾ø½À´Ï´Ù.")
+            print("ì˜í™”ì˜ ì¥ë¥´ ì •ë³´ê°€ ì—†ìŠµë‹ˆë‹¤.")
             return None
 
     def addBookmark(self, query):
