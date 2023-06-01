@@ -1,11 +1,31 @@
-﻿from tkinter import *
+﻿import sys
+import threading
+import matplotlib.pyplot as plt
+from tkinter import *
 from tkinter import font
 from PIL import ImageTk, Image
+from cefpython3 import cefpython as cef
 from MovieQuery import *
 from ChatGPT import *
-import matplotlib.pyplot as plt
+from Map import *
 
 class MovieQuiz:
+    def setup(self):
+        # 브라우저를 위한 쓰레드 생성
+        thread = threading.Thread(target=self.showMap, args=(self.screen3_frame,))
+        thread.daemon = True
+        thread.start()
+
+    # cef모듈로 브라우저 실행
+    def showMap(self, frame):
+        global browser
+        sys.excepthook = cef.ExceptHook
+        window_info = cef.WindowInfo(frame.winfo_id())
+        window_info.SetAsChild(frame.winfo_id(), [0, 0, 510, 800])
+        cef.Initialize()
+        browser = cef.CreateBrowserSync(window_info, url='file:///map.html')
+        cef.MessageLoop()
+
     def show_screen(self, screen_num): # 화면 전환을 처리하는 함수
         screens = [self.screen0_frame, self.screen1_frame, self.screen2_frame, self.screen3_frame, self.screen0_exp_frame]
         screen = screens[screen_num]
@@ -297,25 +317,32 @@ class MovieQuiz:
             self.chart_image_label.image = photo
 
     def setScreen3_frame(self):     # 상영 영화관 화면 GUI 구현
-        pass
+        self.map.get_theater_info()
+
+        # 브라우저 리로드
+        browser.Reload()
+
+        # 체크박스와 버튼을 활용해서 시군구 정보 기입하면 xml 데이터 새로 파싱하도록 기능 구현하기
+        #button = Button(self.screen3_frame, width=20, height=20)
+        #button.place(x=20, y=20)
 
     def __init__(self):
         # tkinter 윈도우 생성
-        self.window = Tk()
-        self.window.title("영화퀴즈_프로그램")
-        self.window.geometry("640x800")
-        self.window.configure(bg='white')
-        self.fontstyle1 = font.Font(self.window, size=14, weight='bold', family='Consolas')
-        self.fontstyle2 = font.Font(self.window, size=10, weight='bold', family='Consolas')
+        window = Tk()
+        window.title("영화퀴즈_프로그램")
+        window.geometry("640x800")
+        window.configure(bg='white')
+        self.fontstyle1 = font.Font(window, size=14, weight='bold', family='Consolas')
+        self.fontstyle2 = font.Font(window, size=10, weight='bold', family='Consolas')
 
-        self.left_frame = Frame(self.window, width=130, height=800) # 좌측 프레임 생성
+        self.left_frame = Frame(window, width=130, height=800) # 좌측 프레임 생성
         self.left_frame.pack(side="left")
 
-        self.screen0_frame = Frame(self.window, width=510, height=800, bg="white")  # new퀴즈 화면
-        self.screen1_frame = Frame(self.window, width=510, height=800, bg="white")  # 즐겨찾기 화면
-        self.screen2_frame = Frame(self.window, width=510, height=800, bg="white")  # 최근 정답율 화면
-        self.screen3_frame = Frame(self.window, width=510, height=800, bg="white")  # 상영 영화관 화면
-        self.screen0_exp_frame = Frame(self.window, width=510, height=800, bg="cyan") # 해설 화면
+        self.screen0_frame = Frame(window, width=510, height=800, bg="white")  # new퀴즈 화면
+        self.screen1_frame = Frame(window, width=510, height=800, bg="white")  # 즐겨찾기 화면
+        self.screen2_frame = Frame(window, width=510, height=800, bg="white")  # 최근 정답율 화면
+        self.screen3_frame = Frame(window, width=510, height=800, bg="white")  # 상영 영화관 화면
+        self.screen0_exp_frame = Frame(window, width=510, height=800, bg="cyan") # 해설 화면
 
         self.image_buttons = []
         self.poster_buttons = []
@@ -341,6 +368,10 @@ class MovieQuiz:
         self.movie = MovieQuery()
         self.show_screen(0)
 
-        self.window.mainloop()
+        # 영화관 지도 기능
+        self.map = Map()
+        self.setup()
+
+        window.mainloop()
 
 MovieQuiz()
