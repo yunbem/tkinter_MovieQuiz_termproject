@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from tkinter import *
 from tkinter import font
 from tkinter import Scrollbar
+import tkinter.ttk as ttk
 from PIL import ImageTk, Image
 from cefpython3 import cefpython as cef
 from MovieQuery import *
@@ -329,15 +330,24 @@ class MovieQuiz:
             self.chart_image_label.config(image=photo)
             self.chart_image_label.image = photo
 
-    def setScreen3_frame(self):     # 상영 영화관 화면 GUI 구현
-        self.map.get_theater_info()
+    def setScreen3_frame(self):  # 상영 영화관 화면 GUI 구현
+        def parse_theater_info():
+            selected_city = city_combobox.get()
 
-        # 브라우저 리로드
-        browser.Reload()
+            # 시군구 정보를 기반으로 영화관 정보를 가져옴
+            self.map.get_theater_info(selected_city)
 
-        # 체크박스와 버튼을 활용해서 시군구 정보 기입하면 xml 데이터 새로 파싱하도록 기능 구현하기
-        #button = Button(self.screen3_frame, width=20, height=20)
-        #button.place(x=20, y=20)
+            # 브라우저 리로드
+            browser.Reload()
+
+        # 시군구 정보 입력을 위한 콤보박스 생성
+        cities = self.map.get_city_list()
+        city_combobox = ttk.Combobox(self.screen3_frame, values=cities, width=20)
+        city_combobox.place(x=20, y=720)
+
+        # 파싱 버튼 생성
+        parse_button = Button(self.screen3_frame, text="파싱", command=parse_theater_info)
+        parse_button.place(x=20, y=750)
 
     def __init__(self):
         # tkinter 윈도우 생성

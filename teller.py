@@ -1,119 +1,74 @@
-﻿#!/usr/bin/python
-# coding=utf-8
-
-import sys
-import time
-import sqlite3
-import telepot
+﻿
+import tkinter as tk
 import requests
+from tkinter import messagebox
 from pprint import pprint
-from urllib.request import urlopen
-from bs4 import BeautifulSoup
-import re
-from datetime import date, datetime, timedelta
-import traceback
+import API_Key
 
-import noti
+class TelegramBot:
+    def __init__(self):
+        self.token = API_Key.tellegram_key
+        self.base_url = f'https://api.telegram.org/bot{self.token}/'
+        self.key = API_Key.Tmdb_api_key
 
-
-def replyAptData(date_param, user, loc_param='11710'):
-    print(user, date_param, loc_param)
-    res_list = noti.getData( loc_param, date_param )
-    msg = ''
-    for r in res_list:
-        print( str(datetime.now()).split('.')[0], r )
-        if len(r+msg)+1>noti.MAX_MSG_LENGTH:
-            noti.sendMessage( user, msg )
-            msg = r+'\n'
+    def get_movie_details(self, movie_title, language='ko-KR'):
+        url = f'https://api.themoviedb.org/3/search/movie?api_key={self.key}&query=\
+        {movie_title}&language={language}'
+        response = requests.get(url)
+        data = response.json()
+        results = data['results']
+        if results:
+            movie_details = results[0]  # Get the first movie in the search results
+            return movie_details
         else:
-            msg += r+'\n'
-    if msg:
-        noti.sendMessage( user, msg )
-    else:
-        noti.sendMessage( user, '%s 기간에 해당하는 데이터가 없습니다.'%date_param )
+            return None
 
-def save( user, loc_param ):
-    conn = sqlite3.connect('users.db')
-    cursor = conn.cursor()
-    cursor.execute('CREATE TABLE IF NOT EXISTS users( user TEXT, location TEXT, PRIMARY KEY(user, location) )')
-    try:
-        cursor.execute('INSERT INTO users(user, location) VALUES ("%s", "%s")' % (user, loc_param))
-    except sqlite3.IntegrityError:
-        noti.sendMessage( user, '이미 해당 정보가 저장되어 있습니다.' )
-        return
-    else:
-        noti.sendMessage( user, '저장되었습니다.' )
-        conn.commit()
+    def send_message(self, chat_id, message):
+        url = f'{self.base_url}sendMessage'
+        params = {
+            'chat_id': chat_id,
+            'text': message
+        }
+        response = requests.post(url, params=params)
+        return response.json()
 
-def check( user ):
-    conn = sqlite3.connect('users.db')
-    cursor = conn.cursor()
-    cursor.execute('CREATE TABLE IF NOT EXISTS users( user TEXT, location TEXT, PRIMARY KEY(user, location) )')
-    cursor.execute('SELECT * from users WHERE user="%s"' % user)
-    for data in cursor.fetchall():
-        row = 'id:' + str(data[0]) + ', location:' + data[1]
-        noti.sendMessage( user, row )
+class App(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title('영화 정보 조회')
+        self.geometry('400x200')
+        self.resizable(False, False)
 
-def getMovieDetails(movie_title):
-    url = f'https://api.themoviedb.org/3/search/movie?api_key={noti.key}&query={movie_title}'
-    response = requests.get(url)
-    data = response.json()
-    results = data['results']
-    if results:
-        movie_details = results[0]  # Get the first movie in the search results
-        return movie_details
-    else:
-        return None
+        self.bot = TelegramBot()
 
-def handle(msg):
-    content_type, chat_type, chat_id = telepot.glance(msg)
-    if content_type != 'text':
-        noti.sendMessage(chat_id, '난 텍스트 이외의 메시지는 처리하지 못해요.')
-        return
+        self.label = tk.Label(self, text='영화명:')
+        self.label.pack()
 
-    text = msg['text']
-    args = text.split(' ')
+        self.entry = tk.Entry(self)
+        self.entry.pack()
 
-    if text.startswith('거래') and len(args)>1:
-        print('try to 거래', args[1])
-        replyAptData( args[1], chat_id, args[2] )
-    elif text.startswith('지역') and len(args)>1:
-        print('try to 지역', args[1])
-        replyAptData( '201705', chat_id, args[1] )
-    elif text.startswith('저장')  and len(args)>1:
-        print('try to 저장', args[1])
-        save( chat_id, args[1] )
-    elif text.startswith('확인'):
-        print('try to 확인')
-        check( chat_id )
-    elif text.startswith('영화') and len(args) > 1:
-        print('try to 영화', args[1])
-        movie_title = ' '.join(args[1:])
-        movie_details = getMovieDetails(movie_title)
+        self.button = tk.Button(self, text='영화 정보 조회', command=self.get_movie_info)
+        self.button.pack()
+
+    def get_movie_info(self):
+        movie_title = self.entry.get().strip()
+        if not movie_title:
+            messagebox.showerror('오류', '영화명을 입력해주세요.')
+            return
+
+        movie_details = self.bot.get_movie_details(movie_title)
         if movie_details:
             movie_title = movie_details['title']
             movie_overview = movie_details['overview']
             movie_release_date = movie_details['release_date']
             movie_msg = f"Title: {movie_title}\nOverview: {movie_overview}\nRelease Date: {movie_release_date}\n"
-            noti.sendMessage(chat_id, movie_msg)
+            pprint(movie_msg)  # 세부 정보 출력 (테스트용)
+            # 텔레그램 봇을 통해 세부 정보 전송
+            self.bot.send_message(API_Key.tellegram_my_id, movie_msg)
         else:
-            noti.sendMessage(chat_id, f"'{movie_title}'에 대한 영화 정보를 찾을 수 없습니다.")
-    else:
-        noti.sendMessage(chat_id, "모르는 명령어입니다.\n")
+            messagebox.showinfo('알림', '해당 영화 정보를 찾을 수 없습니다.')
 
-today = date.today()
-current_month = today.strftime('%Y%m')
+if __name__ == '__main__':
+    app = App()
+    app.mainloop()
 
-print( '[',today,']received token :', noti.TOKEN )
-
-bot = telepot.Bot(noti.TOKEN)
-pprint( bot.getMe() )
-
-bot.message_loop(handle)
-
-print('Listening...')
-
-while 1:
-  time.sleep(10)
-
-# 영화 세부 정보, 포스터를 출력하도록 인자로 영화 제목을 받는 것으로 수정

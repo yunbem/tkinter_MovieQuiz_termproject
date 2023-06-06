@@ -1,16 +1,17 @@
 ﻿import requests
 import random
+import API_Key
 
 class MovieQuery:
     def __init__(self):
         self.params = {
-            "api_key": "7dd451947ac9f89cc2c61f8dce323beb",
+            "api_key": API_Key.Tmdb_api_key,
             "language": "ko",
             "page": "1",
             #"sort_by": "popularity.desc",  # 인기순으로 정렬
             "sort_by": "vote_average.desc",  # 평점순으로 정렬
             #"include_adult": "false"  # 성인 영화 제외
-            "vote_count.gte": "150",  # 최소 투표 수 조건
+            "vote_count.gte": "140",  # 최소 투표 수 조건
         }
 
         self.data = []  # 영화 데이터를 저장할 리스트
@@ -19,7 +20,7 @@ class MovieQuery:
 
     def fetchMovieData(self):
         page = 1
-        for _ in range(12):
+        for _ in range(14):
             self.params["page"] = str(page)
             url = 'https://api.themoviedb.org/3/discover/movie'  # 정보를 요청할 주소
             resp = requests.get(url, params=self.params)
