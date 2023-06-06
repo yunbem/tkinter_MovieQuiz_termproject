@@ -59,7 +59,14 @@ class Map:
                 print('REFINE_WGS84_LOGT:', theater['REFINE_WGS84_LOGT'])
                 print('REFINE_WGS84_LAT:', theater['REFINE_WGS84_LAT'])
                 print()
-
+                '''
+                # 지도에 마커 추가
+                folium.Marker(
+                    location=[theater['REFINE_WGS84_LAT'], theater['REFINE_WGS84_LOGT']],
+                    popup=theater['BIZPLC_NM'],
+                    icon=folium.Icon(color='red', icon='info-sign')
+                ).add_to(self.m)
+                '''
                 self.marker_cluster.add_child(
                     # 지도에 마커 추가
                     folium.Marker(
@@ -68,8 +75,9 @@ class Map:
                         icon=folium.Icon(color='red', icon='info-sign')
                     )
                 )
+                
+            # 마커 클러스터 생성 및 마커 추가
             self.m.add_child(self.marker_cluster)
-           
 
             # 지도를 HTML 파일로 저장
             self.m.save('map.html')

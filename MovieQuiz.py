@@ -188,7 +188,7 @@ class MovieQuiz:
                 print(f"포스터 {i} 이미지 다운로드 실패")
 
     def setGptInstance(self):   # gpt 연동하기
-        self.gpt = ChatGPT(self.movie_title)
+        self.gpt = ChatGPT(self.movie_overview)
         self.set_MovieStr(self.gpt.getPrompt()) # 텍스트 박스에 gpt 대답 기입하기
         if self.hint_use_check == False:
             self.hint_count += 1
