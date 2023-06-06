@@ -3,6 +3,7 @@ import threading
 import matplotlib.pyplot as plt
 from tkinter import *
 from tkinter import font
+from tkinter import Scrollbar
 from PIL import ImageTk, Image
 from cefpython3 import cefpython as cef
 from MovieQuery import *
@@ -202,10 +203,13 @@ class MovieQuiz:
                           bg='white', font=self.fontstyle2)
         Gpt_label2.place(x=80, y=260)
         
+        # 2023.05.25
         # 토큰 사용량에 따라 비용을 내야하기 때문에 주의. 
         # 처음 api를 사용할 때 3개월동안 18달러까지는 무료로 사용할 수 있다. 
+        
+        # 2023.06.06 
+        # gpt 오류 때문에 그냥 유료판 구매했다
         Gpt_button = Button(self.screen0_frame, width=40, height=40 , command=self.setGptInstance)
-        #Gpt_button = Button(self.screen0_frame, width=40, height=40)
         Gpt_button.place(x=20, y=240)
         image = Image.open("ChatGPT.png")
         image = image.resize((40, 40))
@@ -239,11 +243,9 @@ class MovieQuiz:
         self.chart_image_label.image = self.chart_image
 
     def setScreen0_frame(self): # new퀴즈 화면 GUI 구현
-        # 문제 영화 정보 받기
-        #self.movie_query = self.movie.getRandomQuery()
-        #self.movie.getMovieInfo(self.movie_query)
+
         self.movie.getMovieInfo(self.movie.getRandomQuery())
-        self.movie_query = self.movie.getMovieQuery()           # 진짜 거지같은 코드다
+        self.movie_query = self.movie.getMovieQuery()         
         self.movie_title = self.movie.getMovieTitle(self.movie_query)       # 문제 영화 제목
         self.movie_overview = self.movie.getMovieOverview(self.movie_query) # 문제 영화 줄거리
 
@@ -278,23 +280,33 @@ class MovieQuiz:
         for text_box in self.prob_text_boxs:
             text_box.delete(1.0, END)  # 기존 텍스트 삭제
 
-    def setScreen1_frame(self):     # 즐겨찾기 화면 GUI 구현
+    def setScreen1_frame(self):
+        # screen1_frame(즐겨찾기 화면)에 리스트 박스 생성
+        self.canvas = Canvas(self.screen1_frame, width=460, height=700, bg="white")
+        self.canvas.pack(side=LEFT, fill=BOTH, expand=True)
 
-        # screen1_frame(즐겨찾기 화면)에 텍스트 박스 생성
-        self.bookmark_text_boxs = []
+        scrollbar = Scrollbar(self.screen1_frame, orient=VERTICAL, command=self.canvas.yview)
+        scrollbar.pack(side=RIGHT, fill=Y)
 
-        for i in range(1, len(self.movie.getBookmarks()) + 1):
-            bookmark_text_box = Text(self.screen1_frame, width=36, height=20)
-            bookmark_text_box.place(x=200, y=20+(i-1)*220)
-            self.bookmark_text_boxs.append(bookmark_text_box)
-            image = Image.open(f'bookmark_poster{i}.jpg')
-            image = image.resize((150, 200))
-            photo = ImageTk.PhotoImage(image)
-            bookmark_poster = Label(self.screen1_frame, image=photo)
-            bookmark_poster.place(x=20, y=20+(i-1)*220)
-            bookmark_poster.image = photo
+        self.frame = Frame(self.canvas, bg="white")
+        self.canvas.create_window((0, 0), window=self.frame, anchor=NW)
+
+        self.frame.bind("<Configure>", lambda event: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
 
         for i, movie in enumerate(self.movie.getBookmarks()):
+            image = Image.open(f'bookmark_poster{i+1}.jpg')
+            image = image.resize((150, 200))
+            photo = ImageTk.PhotoImage(image)
+
+            bookmark_poster = Label(self.frame, image=photo)
+            bookmark_poster.grid(row=i, column=0, padx=10, pady=10)
+            bookmark_poster.image = photo
+            self.bookmark_posters.append(bookmark_poster)
+
+            bookmark_listbox = Text(self.frame, width=36, height=20)
+            bookmark_listbox.grid(row=i, column=1, padx=10, pady=10)
+            self.bookmark_listboxes.append(bookmark_listbox)
+
             title = self.movie.getMovieTitle(movie)
             release_date = self.movie.getMovieRelease(movie)
             vote_average = self.movie.getMovieVote(movie)
@@ -303,7 +315,8 @@ class MovieQuiz:
             info = f"영화 제목: {title}\n개봉 일자: {release_date}\n평점: {vote_average}\n개요: {overview}"
 
             # info를 화면에 출력하는 코드 추가
-            self.bookmark_text_boxs[i].insert(END, info)
+            self.bookmark_listboxes[i].insert(END, info)
+
 
     def setScreen2_frame(self):     # 최근 정답율 화면 GUI 구현
         # 파이 차트 생성 및 표시
@@ -363,7 +376,12 @@ class MovieQuiz:
         self.setupPosterButton()
         self.setupBookmarksButton()
         self.setupTextBox()
-        
+
+        self.bookmark_listboxes = []
+        self.bookmark_posters = []
+        self.canvas = None
+        self.frame = None
+  
         # 초기 화면 설정
         self.movie = MovieQuery()
         self.show_screen(0)
