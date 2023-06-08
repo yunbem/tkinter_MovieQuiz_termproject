@@ -10,9 +10,9 @@ class MovieQuery:
             "page": "1",
             #"sort_by": "popularity.desc",  # 인기순으로 정렬
             "sort_by": "vote_average.desc",  # 평점순으로 정렬
-            "vote_average.gte": "7",
+            "vote_average.gte": "6",
             #"include_adult": "false"  # 성인 영화 제외
-            "vote_count.gte": "500",  # 최소 투표 수 조건
+            "vote_count.gte": "450",  # 최소 투표 수 조건
             #"primary_release_date.gte": "2000-01-01"
         }
 
@@ -122,4 +122,7 @@ class MovieQuery:
 
     def getBookmarks(self):
         return self.bookmarks
+
+    def getBookmarksMovieTitle(self):
+        return [query['title'] for query in self.bookmarks]
         

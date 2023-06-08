@@ -3,13 +3,13 @@ import threading
 import matplotlib.pyplot as plt
 from tkinter import *
 from tkinter import font
-from tkinter import Scrollbar
 import tkinter.ttk as ttk
 from PIL import ImageTk, Image
 from cefpython3 import cefpython as cef
 from MovieQuery import *
-from ChatGPT import *
-from Map import *
+from ChatGPT import ChatGPT
+from Map import Map
+from teller import *
 
 class MovieQuiz:
     def setup(self):
@@ -59,7 +59,6 @@ class MovieQuiz:
             if self.hint_use_check == False:
                 self.wrong_count += 1
             self.screen0_exp_frame.configure(bg='indian red')
-        self.prob_count += 1
         self.show_screen(4);
 
     def check_info(self, choice):
@@ -158,15 +157,55 @@ class MovieQuiz:
             self.bookmarks_buttons[i].config(image=photo)
             self.bookmarks_buttons[i].image = photo
 
+    def get_movie_info(self): # 텔레그램 기능
+        movie_title = self.entry.get().strip()
+        # 만약 entry에 기입한 영화가 없다면 콤보박스 탐색
+        if movie_title == '':
+            movie_title = self.Bookmark_combobox.get()
+
+        if not movie_title:
+            print('영화명을 입력해주세요.')
+            return
+
+        movie_details = self.bot.get_movie_details(movie_title)
+        if movie_details:
+            movie_title = movie_details['title']
+            movie_overview = movie_details['overview']
+            movie_release_date = movie_details['release_date']
+            movie_poster_path = movie_details['poster_path']
+
+            movie_msg = f"Title: {movie_title}\nOverview: {movie_overview}\nRelease Date: {movie_release_date}\n"
+            pprint(movie_msg)  # 세부 정보 출력 (테스트용)
+
+            # 텔레그램 봇을 통해 세부 정보 전송
+            # 포스터 이미지 전송
+            if movie_poster_path:
+                poster_url = self.bot.get_movie_poster_url(movie_poster_path)
+                self.bot.send_photo(API_Key.telegram_my_id, poster_url)
+                self.bot.send_message(API_Key.telegram_my_id, movie_msg)
+                print('성공!', poster_url)
+            else:
+                self.bot.send_message(API_Key.telegram_my_id, movie_msg)
+        else:
+            print('해당 영화 정보를 찾을 수 없습니다.')
+
     def setupSubButton(self):
         def test():
             pass
+
+        self.entry = Entry(self.screen1_frame)
+        self.entry.pack(side=TOP,anchor="e")
+
+        # 즐겨찾기에 등록된 영화 검색을 위한 콤보박스 생성
+        BookmarkMovies = self.movie.getBookmarksMovieTitle()
+        self.Bookmark_combobox = ttk.Combobox(self.screen1_frame, values=BookmarkMovies, width=20)
+        self.Bookmark_combobox.pack(side=TOP,anchor="e")
 
         image = Image.open("telegram.png")
         image = image.resize((40, 40))
         photo = ImageTk.PhotoImage(image)
 
-        button = Button(self.screen1_frame, width=40, height=40, command=test)
+        button = Button(self.screen1_frame, width=40, height=40, command=self.get_movie_info)
         button.pack(side=TOP, anchor="e")
         self.sub_buttons.append(button)
         self.sub_buttons[0].config(image=photo)
@@ -368,6 +407,13 @@ class MovieQuiz:
             # info를 화면에 출력하는 코드 추가
             self.bookmark_textboxes[i].insert(END, info)
 
+        self.entry.delete(0, 'end')
+
+        BookmarkMovies = self.movie.getBookmarksMovieTitle()
+        BookmarkMovies.append("")  # 빈 정보를 추가
+        self.Bookmark_combobox.configure(values=BookmarkMovies)
+
+
     def setScreen2_frame(self):     # 최근 정답율 화면 GUI 구현
         # 파이 차트 생성 및 표시
         if not self.answer_count == self.wrong_count == self.hint_count == 0:
@@ -422,6 +468,8 @@ class MovieQuiz:
         self.screen3_frame = Frame(window, width=510, height=800, bg="white")  # 상영 영화관 화면
         self.screen0_exp_frame = Frame(window, width=510, height=800, bg="cyan") # 해설 화면
 
+        self.movie = MovieQuery()
+
         self.image_buttons = []
         self.poster_buttons = []
         self.poster_buttons2 = []
@@ -429,13 +477,11 @@ class MovieQuiz:
         self.bookmarks_buttons = []
         self.sub_buttons = [] # 0번 원소는 telegram 기능, 1번 원소는 메모장 저장 기능
         self.prob_text_boxs = []
-        self.bookmark_text_boxs = []
         self.prob_movies = []
         self.answer_count = 0
         self.wrong_count = 0
         self.hint_count = 0
         self.hint_use_check = False
-        self.prob_count = 0
         self.answer_position = 0 # 0,1,2,3
 
         self.setupDefaultImageButton()
@@ -443,7 +489,7 @@ class MovieQuiz:
         self.setupDefaultLabel()
         self.setupPosterButton()
         self.setupBookmarksButton()
-        self.setupSubButton()
+        self.setupSubButton() # 즐겨찾기 화면에 들어가는 부가 버튼들 배치
         self.setupTextBox()
 
         self.bookmark_textboxes = []
@@ -452,7 +498,7 @@ class MovieQuiz:
         self.frame = None
   
         # 초기 화면 설정
-        self.movie = MovieQuery()
+        
         self.show_screen(0)
 
         # screen1_frame(즐겨찾기 화면)에 리스트 박스 생성
@@ -470,6 +516,9 @@ class MovieQuiz:
         # 영화관 지도 기능
         self.map = Map()
         self.setup()
+
+        # 텔레그램 챗봇
+        self.bot = Tele()
 
         window.mainloop()
 
