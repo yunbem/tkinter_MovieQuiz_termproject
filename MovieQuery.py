@@ -10,8 +10,10 @@ class MovieQuery:
             "page": "1",
             #"sort_by": "popularity.desc",  # 인기순으로 정렬
             "sort_by": "vote_average.desc",  # 평점순으로 정렬
+            "vote_average.gte": "7",
             #"include_adult": "false"  # 성인 영화 제외
-            "vote_count.gte": "140",  # 최소 투표 수 조건
+            "vote_count.gte": "500",  # 최소 투표 수 조건
+            #"primary_release_date.gte": "2000-01-01"
         }
 
         self.data = []  # 영화 데이터를 저장할 리스트
@@ -20,7 +22,7 @@ class MovieQuery:
 
     def fetchMovieData(self):
         page = 1
-        for _ in range(14):
+        for _ in range(15):
             self.params["page"] = str(page)
             url = 'https://api.themoviedb.org/3/discover/movie'  # 정보를 요청할 주소
             resp = requests.get(url, params=self.params)
@@ -94,18 +96,22 @@ class MovieQuery:
         return query['overview']
 
     def getSimilarGenreMovies(self, query):
-        genre_id = query['genre_ids'][0] if 'genre_ids' in query else None
-
-        if genre_id:
-            similar_movies = []
-            for movie in self.data:
-                if 'genre_ids' in movie and genre_id in movie['genre_ids']:
-                    similar_movies.append(movie)
-            
-            return similar_movies
-        else:
+        genre_ids = query.get('genre_ids', [])
+        if not genre_ids:
             print("영화의 장르 정보가 없습니다.")
             return None
+
+        added_movies = set()  # 중복 영화를 걸러내기 위한 집합
+
+        similar_movies = [movie for movie in self.data
+                          if any(genre_id in movie.get('genre_ids', []) for genre_id in genre_ids)
+                          and movie['id'] not in added_movies
+                          and movie not in self.bookmarks][:10]
+
+        added_movies.update(movie['id'] for movie in similar_movies)
+
+        return similar_movies
+
 
     def addBookmark(self, query):
         self.bookmarks.append(query)

@@ -117,6 +117,18 @@ class MovieQuiz:
         self.chart_image_label = Label(self.screen2_frame)
         self.chart_image_label.pack()
 
+        self.answer_label = Label(self.screen2_frame, text="맞춘 정답의 수: "+str(self.answer_count), 
+                          bg='white', font=self.fontstyle1)
+        self.answer_label.pack()
+
+        self.wrong_label = Label(self.screen2_frame, text="틀린 오답의 수: "+str(self.wrong_count), 
+                          bg='white', font=self.fontstyle1)
+        self.wrong_label.pack()
+
+        self.hint_label = Label(self.screen2_frame, text="힌트를 쓴 답의 수: "+str(self.hint_count), 
+                          bg='white', font=self.fontstyle1)
+        self.hint_label.pack()
+
     def setupPosterButton(self):
         # 퀴즈 화면 포스터 버튼 생성 및 배치
         button_coordinates = [(50, 340), (270, 340), (50, 560), (270, 560)] # 퀴즈 화면 프레임 내 포스트 버튼 4개
@@ -138,13 +150,37 @@ class MovieQuiz:
         image = image.resize((40, 40))
         photo = ImageTk.PhotoImage(image)
         
-        button_coordinates = [(20, 90), (240, 90), (20, 460), (240, 460)] # 해설 화면 프레임 내 포스트 버튼 4개
+        button_coordinates = [(20, 240), (240, 240), (20, 610), (240, 610)] # 해설 화면 프레임 내 포스트 버튼 4개
         for i, (x, y) in enumerate(button_coordinates):
             bookmark_button = Button(self.screen0_exp_frame, width=40, height=40, command=lambda choice=i: self.check_bookmarks(choice))
             bookmark_button.place(x=x, y=y)
             self.bookmarks_buttons.append(bookmark_button)
             self.bookmarks_buttons[i].config(image=photo)
             self.bookmarks_buttons[i].image = photo
+
+    def setupSubButton(self):
+        def test():
+            pass
+
+        image = Image.open("telegram.png")
+        image = image.resize((40, 40))
+        photo = ImageTk.PhotoImage(image)
+
+        button = Button(self.screen1_frame, width=40, height=40, command=test)
+        button.pack(side=TOP, anchor="e")
+        self.sub_buttons.append(button)
+        self.sub_buttons[0].config(image=photo)
+        self.sub_buttons[0].image = photo
+
+        image = Image.open("note.png")
+        image = image.resize((40, 40))
+        photo = ImageTk.PhotoImage(image)
+
+        button = Button(self.screen1_frame, width=40, height=40, command=test)
+        button.pack(side= RIGHT, anchor="n")
+        self.sub_buttons.append(button)
+        self.sub_buttons[1].config(image=photo)
+        self.sub_buttons[1].image = photo
 
     def setupTextBox(self):
         # screen0_exp_frame(해설 화면)에 텍스트 정보를 담는 박스 4개 생성
@@ -175,7 +211,8 @@ class MovieQuiz:
             self.poster_buttons2[i].image = photo
 
     def random_movies_PosterDownload(self):
-        self.rand_movies = random.sample(self.prob_movies, len(self.prob_movies))
+        self.rand_movies = random.sample(self.prob_movies, len(self.prob_movies)) # 보기 영화 4개를 랜덤으로 섞음
+        
         for i, prob_movie in enumerate(self.rand_movies):
             poster_path = prob_movie['poster_path']
             poster_url = f"https://image.tmdb.org/t/p/w500/{poster_path}"
@@ -188,6 +225,10 @@ class MovieQuiz:
                 print(f"포스터 {i} 이미지 다운로드 완료")
             else:
                 print(f"포스터 {i} 이미지 다운로드 실패")
+
+            if prob_movie == self.movie_query:
+                self.answer_position = i
+                print(self.answer_position,' 가 현재 정답 위치입니다.')
 
     def setGptInstance(self):   # gpt 연동하기
         self.gpt = ChatGPT(self.movie_overview)
@@ -276,23 +317,32 @@ class MovieQuiz:
         self.setPosterButton()
 
     def setScreen0_exp_frame(self): # 퀴즈해설 화면 GUI 구현
-        self.Prob_label.configure(text="정답은... '"+str(self.movie_title)+ "' 입니다!")
+        # 해설 화면 체크 라벨 생성 및 배치
+        label_coordinates = [(20, 90), (240, 90), (20, 460), (240, 460)]
+        for i, (x, y) in enumerate(label_coordinates):
+            if self.answer_position == i:
+                image = Image.open("o.png")
+                image = image.resize((40, 40))
+                photo = ImageTk.PhotoImage(image)
+                # print('i는 ', i)
+            else:
+                image = Image.open("x.png")
+                image = image.resize((40, 40))
+                photo = ImageTk.PhotoImage(image)
+
+            ox_label = Label(self.screen0_exp_frame, image=photo)
+            ox_label.place(x=x, y=y)
+            ox_label.config(image=photo)
+            ox_label.image = photo
+
+        # 정답 영화 제목 출력
+        self.Prob_label.configure(text="정답은... '"+(self.movie_title)+ "' 입니다!")
 
         for text_box in self.prob_text_boxs:
             text_box.delete(1.0, END)  # 기존 텍스트 삭제
 
     def setScreen1_frame(self):
-        # screen1_frame(즐겨찾기 화면)에 리스트 박스 생성
-        self.canvas = Canvas(self.screen1_frame, width=460, height=700, bg="white")
-        self.canvas.pack(side=LEFT, fill=BOTH, expand=True)
-
-        scrollbar = Scrollbar(self.screen1_frame, orient=VERTICAL, command=self.canvas.yview)
-        scrollbar.pack(side=RIGHT, fill=Y)
-
-        self.frame = Frame(self.canvas, bg="white")
-        self.canvas.create_window((0, 0), window=self.frame, anchor=NW)
-
-        self.frame.bind("<Configure>", lambda event: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
+        self.bookmark_textboxes = []
 
         for i, movie in enumerate(self.movie.getBookmarks()):
             image = Image.open(f'bookmark_poster{i+1}.jpg')
@@ -304,9 +354,9 @@ class MovieQuiz:
             bookmark_poster.image = photo
             self.bookmark_posters.append(bookmark_poster)
 
-            bookmark_listbox = Text(self.frame, width=36, height=20)
-            bookmark_listbox.grid(row=i, column=1, padx=10, pady=10)
-            self.bookmark_listboxes.append(bookmark_listbox)
+            bookmark_textbox = Text(self.frame, width=36, height=20)
+            bookmark_textbox.grid(row=i, column=1, padx=10, pady=10)
+            self.bookmark_textboxes.append(bookmark_textbox)
 
             title = self.movie.getMovieTitle(movie)
             release_date = self.movie.getMovieRelease(movie)
@@ -316,8 +366,7 @@ class MovieQuiz:
             info = f"영화 제목: {title}\n개봉 일자: {release_date}\n평점: {vote_average}\n개요: {overview}"
 
             # info를 화면에 출력하는 코드 추가
-            self.bookmark_listboxes[i].insert(END, info)
-
+            self.bookmark_textboxes[i].insert(END, info)
 
     def setScreen2_frame(self):     # 최근 정답율 화면 GUI 구현
         # 파이 차트 생성 및 표시
@@ -329,6 +378,12 @@ class MovieQuiz:
             photo = ImageTk.PhotoImage(image)
             self.chart_image_label.config(image=photo)
             self.chart_image_label.image = photo
+
+        self.answer_label.configure(text="맞춘 정답의 수: "+str(self.answer_count))
+
+        self.wrong_label.configure(text="틀린 오답의 수: "+str(self.wrong_count))
+
+        self.hint_label.configure(text="힌트를 쓴 답의 수: "+str(self.hint_count))
 
     def setScreen3_frame(self):  # 상영 영화관 화면 GUI 구현
         def parse_theater_info():
@@ -353,7 +408,7 @@ class MovieQuiz:
         # tkinter 윈도우 생성
         window = Tk()
         window.title("영화퀴즈_프로그램")
-        window.geometry("640x800")
+        window.geometry("680x800")
         window.configure(bg='white')
         self.fontstyle1 = font.Font(window, size=14, weight='bold', family='Consolas')
         self.fontstyle2 = font.Font(window, size=10, weight='bold', family='Consolas')
@@ -370,7 +425,9 @@ class MovieQuiz:
         self.image_buttons = []
         self.poster_buttons = []
         self.poster_buttons2 = []
+        self.OX_labels = []
         self.bookmarks_buttons = []
+        self.sub_buttons = [] # 0번 원소는 telegram 기능, 1번 원소는 메모장 저장 기능
         self.prob_text_boxs = []
         self.bookmark_text_boxs = []
         self.prob_movies = []
@@ -379,15 +436,17 @@ class MovieQuiz:
         self.hint_count = 0
         self.hint_use_check = False
         self.prob_count = 0
+        self.answer_position = 0 # 0,1,2,3
 
         self.setupDefaultImageButton()
         self.setImageButton()
         self.setupDefaultLabel()
         self.setupPosterButton()
         self.setupBookmarksButton()
+        self.setupSubButton()
         self.setupTextBox()
 
-        self.bookmark_listboxes = []
+        self.bookmark_textboxes = []
         self.bookmark_posters = []
         self.canvas = None
         self.frame = None
@@ -395,6 +454,18 @@ class MovieQuiz:
         # 초기 화면 설정
         self.movie = MovieQuery()
         self.show_screen(0)
+
+        # screen1_frame(즐겨찾기 화면)에 리스트 박스 생성
+        self.canvas = Canvas(self.screen1_frame, width=460, height=700, bg="white")
+        self.canvas.pack(side=LEFT, fill=BOTH, expand=True)
+
+        scrollbar = Scrollbar(self.screen1_frame, orient=VERTICAL, command=self.canvas.yview)
+        scrollbar.pack(side=RIGHT, fill=Y)
+
+        self.frame = Frame(self.canvas, bg="white")
+        self.canvas.create_window((0, 0), window=self.frame, anchor=NW)
+
+        self.frame.bind("<Configure>", lambda event: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
 
         # 영화관 지도 기능
         self.map = Map()
